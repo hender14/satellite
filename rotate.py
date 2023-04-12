@@ -221,4 +221,4 @@ axs[1, 1].set_ylabel('Rotation Axes')
 fig.tight_layout()
 
 # グラフをPNGファイルに保存
-fig.savefig('combined_graph.png')
+fig.savefig('out/combined_graph.png')
