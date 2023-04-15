@@ -41,7 +41,7 @@ class DisturbTorq:
         # 外乱ﾄﾙｸ推定
         estimated_disturbance_torque = self.disturb_torque_filter.update(disturbance_torque)
 
-        state_fb = self.alpha * q_err[:3] - self.beta * omega_err
+        state_fb = self.alpha * q_err[:3] + self.beta * omega_err
 
         # Solve the motion equations
         u = state_fb + estimated_disturbance_torque

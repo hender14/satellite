@@ -41,6 +41,7 @@ I_inv = np.linalg.inv(I)
 euler_angles_tgt = np.array([math.radians(-5), math.radians(5), math.radians(10)])  # 目標ｵｲﾗｰ角
 euler_angles_init = np.array([math.radians(30), math.radians(10), math.radians(-20)])  # 初期ｵｲﾗｰ角
 omega_init = np.array([0.0, 0.0, 0.0])  # 初期角速度
+omega_tgt = np.array([0.0, 0.0, 0.0])  # 初期角速度
 
 # ｸｫｰﾀﾆｵﾝに変換
 q_current = tf.euler_to_quaternion(*euler_angles_init)
@@ -58,13 +59,14 @@ estimated_disturbance_torque_his = []
 
 # class生成
 ff = ff.DisturbTorq()
-omega = omega.AngulVelocity(omega_current)
+omega = omega.AngulVelocity(omega_current, omega_tgt)
 state = state.Quaternion(q_current, q_tgt)
 
 
 for step in range(n_steps):
     # 外乱ﾄﾙｸの算出
-    u = ff.calc_disturb_trq(q_err, omega_current, step)
+    # u = ff.calc_disturb_trq(q_err, omega_current, step)
+    u = ff.calc_disturb_trq(q_err, omega.omega_err, step)
     # 角速度の算出
     omega_current = omega.calc_omega(I, omega_current, u, I_inv, dt)
     # ｸｫｰﾀﾆｵﾝの算出
@@ -79,6 +81,7 @@ for step in range(n_steps):
     q_err_his.append(q_err)
     euler_angles_current_his.append(euler_angles_current.copy())
     lambda_his.append(lambdai)
+    estimated_disturbance_torque_his.append(u)
 
 # ﾌﾟﾛｯﾄを実施
 pt.plot(q_current_his, q_err_his, euler_angles_current_his, lambda_his, n_steps)
