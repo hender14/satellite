@@ -12,20 +12,20 @@ def plot(q_current_his, q_err_his, euler_angles_current_his, lambda_his, n_steps
     euler_angles = np.array(euler_angles_current_his)
     rotation_axes = np.array(lambda_his)
 
-    # グラフの初期化
+    # ｸﾞﾗﾌの初期化
     fig, axs = plt.subplots(2, 2, figsize=(12, 8))
 
-    # 時間とクォータニオンの関係
+    # 時間とｸｫｰﾀﾆｵﾝの関係
     axs[0, 0].plot(time, quaternions)
     axs[0, 0].set_xlabel('Time')
     axs[0, 0].set_ylabel('Quaternions')
 
-    # 時間と誤差クォータニオンの関係
+    # 時間と誤差ｸｫｰﾀﾆｵﾝの関係
     axs[0, 1].plot(time, error_quaternions)
     axs[0, 1].set_xlabel('Time')
     axs[0, 1].set_ylabel('Error Quaternions')
 
-    # 時間とオイラー角の関係
+    # 時間とｵｲﾗｰ角の関係
     axs[1, 0].plot(time, euler_angles)
     axs[1, 0].set_xlabel('Time')
     axs[1, 0].set_ylabel('Euler Angles')
@@ -36,10 +36,10 @@ def plot(q_current_his, q_err_his, euler_angles_current_his, lambda_his, n_steps
     axs[1, 1].set_xlabel('Time')
     axs[1, 1].set_ylabel('Rotation Axes')
 
-    # グラフのレイアウトを調整
+    # ｸﾞﾗﾌのﾚｲｱｳﾄを調整
     fig.tight_layout()
 
-    # グラフをPNGファイルに保存
+    # ｸﾞﾗﾌをPNGﾌｧｲﾙに保存
     fig.savefig('out/combined_graph.png')
 
 def plot2(history, n_steps):
@@ -51,16 +51,16 @@ def plot2(history, n_steps):
     # euler_angles = np.array(euler_angles_current_his)
     # rotation_axes = np.array(lambda_his)
 
-    # グラフの初期化
+    # ｸﾞﾗﾌの初期化
     fig, axs = plt.subplots(2, 2, figsize=(12, 8))
 
-    # 時間とクォータニオンの関係
+    # 時間と外乱ﾄﾙｸの関係
     axs[0, 0].plot(time, quaternions)
     axs[0, 0].set_xlabel('Time')
     axs[0, 0].set_ylabel('disturbance_torque')
 
-    # グラフのレイアウトを調整
+    # ｸﾞﾗﾌのﾚｲｱｳﾄを調整
     fig.tight_layout()
 
-    # グラフをPNGファイルに保存
+    # ｸﾞﾗﾌをPNGﾌｧｲﾙに保存
     fig.savefig('out/disturbance_torque_graph.png')

@@ -1,33 +1,85 @@
+import math
 import numpy as np
-from scipy import linalg
+import plot as pt
+import transform as tf
+import ff.ff as ff
+import omega.omega as omega
+import state.state as state
 
-# Constants and parameters
-I = np.array([[1000, 0, 0],
-              [0, 60, 0],
-              [0, 0, 1000]])  # Inertia matrix
-A = np.zeros((6, 6))  # State matrix (3x3 quaternion error + 3x3 angular velocity error)
-A[3:, :3] = -np.linalg.inv(I)  # Fill the lower-left block with the negative inverse of the inertia matrix
-B = np.vstack((np.zeros((3, 3)), np.linalg.inv(I)))  # Input matrix (6x3, with the lower-right block being the inverse of the inertia matrix)
+# def debug_all():
+#     if DEBUG:
+#         debug("n_steps", n_steps)
+#         debug("q_current", q_current)
+#         debug("q_tgt", q_tgt)
+#         debug("q_err", q_err)
+#         debug("euler_angles_current", euler_angles_current)
+#         debug("lambdai", lambdai)
+#         debug("theta_err", theta_err)
+#         debug("disturbance_torque", disturbance_torque)
+#         debug("estimated_disturbance_torque", estimated_disturbance_torque)
+#         debug("u", u)
+#         debug("tmp_l", tmp_l)
+#         debug("tmp_r", tmp_r)
+#         debug("omega_dot", omega_dot)
+#         debug("q_dot", q_dot)
+#         debug("omega_current", omega_current)
 
-# LQR weights
-Q = np.diag([1, 1, 1, 1e-2, 1e-2, 1e-2])  # State weight matrix (emphasize quaternion error over angular velocity error)
-R = np.diag([1e-3, 1e-3, 1e-3])  # Control input weight matrix (minimize torque)
 
-# Calculate the LQR gain matrix K
-P = linalg.solve_continuous_are(A, B, Q, R)
-K = np.linalg.inv(R) @ B.T @ P
+def debug(name, value):
+    print("{}: {}".format(name, value))
 
-# Simulation parameters
-n_steps = 100
+DEBUG = 0
+
+I = np.array([
+    [1000, 0, 0],
+    [0, 60, 0],
+    [-7, 0, 1000]
+])
+
+I_inv = np.linalg.inv(I)
+
+euler_angles_tgt = np.array([math.radians(-5), math.radians(5), math.radians(10)])  # 目標ｵｲﾗｰ角
+euler_angles_init = np.array([math.radians(30), math.radians(10), math.radians(-20)])  # 初期ｵｲﾗｰ角
+omega_init = np.array([0.0, 0.0, 0.0])  # 初期角速度
+
+# ｸｫｰﾀﾆｵﾝに変換
+q_current = tf.euler_to_quaternion(*euler_angles_init)
+q_tgt = tf.euler_to_quaternion(*euler_angles_tgt)
+q_err = tf.quaternion_multiply(tf.quaternion_inverse(q_current), q_tgt)
+omega_current = omega_init
+
+# ｼﾐｭﾚｰｼｮﾝﾊﾟﾗﾒｰﾀ
+n_steps = 5000
 dt = 0.1
 
-# Initial conditions
-q_err_init = np.array([0.1, 0.1, 0.1])  # Initial quaternion error
-omega_err_init = np.array([0.01, 0.01, 0.01])  # Initial angular velocity error
-state = np.hstack((q_err_init, omega_err_init))  # Initial state
+# plot用変数の生成
+q_current_his, q_err_his, theta_err_his, euler_angles_current_his, lambda_his = [], [], [], [], []
+estimated_disturbance_torque_his = []
 
-# Simulation loop
+# class生成
+ff = ff.DisturbTorq()
+omega = omega.AngulVelocity(omega_current)
+state = state.Quaternion(q_current, q_tgt)
+
+
 for step in range(n_steps):
-    u = -K @ state  # Calculate the control input (torque)
-    state_dot = A @ state + B @ u  # Update the state derivative
-    state += state_dot * dt  # Update the state
+    # 外乱ﾄﾙｸの算出
+    u = ff.calc_disturb_trq(q_err, omega_current, step)
+    # 角速度の算出
+    omega_current = omega.calc_omega(I, omega_current, u, I_inv, dt)
+    # ｸｫｰﾀﾆｵﾝの算出
+    q_current, q_err = state.calc_quater(omega_current, dt)
+
+    # debug用に座標変換を実施
+    euler_angles_current = tf.quaternion_to_euler(q_current) # ｸｫｰﾀﾆｵﾝからｵｲﾗｰ角を計算
+    lambdai, theta_err = tf.quaternion_to_axis_angle(q_err) # ｸｫｰﾀﾆｵﾝ誤差から回転単位ﾍﾞｸﾄﾙ、角度を計算
+
+    # 配列に各要素を追加
+    q_current_his.append(q_current.copy())
+    q_err_his.append(q_err)
+    euler_angles_current_his.append(euler_angles_current.copy())
+    lambda_his.append(lambdai)
+
+# ﾌﾟﾛｯﾄを実施
+pt.plot(q_current_his, q_err_his, euler_angles_current_his, lambda_his, n_steps)
+pt.plot2(estimated_disturbance_torque_his,  n_steps)
