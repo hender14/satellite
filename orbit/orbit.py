@@ -1,5 +1,10 @@
 import numpy as np
 from scipy.optimize import minimize
+import matplotlib as mpl
+mpl.use('Agg') # AGG(Anti-Grain Geometry engine)
+import matplotlib.pyplot as plt
+
+DEBUG = 0
 
 # 仮の衛星位置データ（単位：キロメートル）
 observations = [
@@ -90,14 +95,15 @@ result = minimize(objective_function, initial_guess, args=(observations, times, 
 optimized_orbit_elements = result.x
 a, e, i, omega, w, M0 = optimized_orbit_elements
 
-# 最適化された軌道要素を出力する
-print("Optimized orbit elements:")
-print("Semimajor axis (a):", a, "km")
-print("Eccentricity (e):", e)
-print("Inclination (i):", np.rad2deg(i), "degrees")
-print("Right ascension of the ascending node (omega):", np.rad2deg(omega), "degrees")
-print("Argument of periapsis (w):", np.rad2deg(w), "degrees")
-print("Mean anomaly at epoch (M0):", np.rad2deg(M0), "degrees")
+if DEBUG:
+    # 最適化された軌道要素を出力する
+    print("Optimized orbit elements:")
+    print("Semimajor axis (a):", a, "km")
+    print("Eccentricity (e):", e)
+    print("Inclination (i):", np.rad2deg(i), "degrees")
+    print("Right ascension of the ascending node (omega):", np.rad2deg(omega), "degrees")
+    print("Argument of periapsis (w):", np.rad2deg(w), "degrees")
+    print("Mean anomaly at epoch (M0):", np.rad2deg(M0), "degrees")
 
 def calculate_position_velocity(orbit_elements, time, mu):
     # 上記の calculate_position 関数を使用して位置を計算
@@ -125,11 +131,50 @@ def calculate_position_velocity(orbit_elements, time, mu):
     return position_2d, angle, velocity_2d, angular_velocity
 
 # 任意の時刻での2次元の位置情報、角度、速度、および角速度を計算
-time = 100.0  # 任意の時刻（単位：秒）
-position_2d, angle, velocity_2d, angular_velocity = calculate_position_velocity(optimized_orbit_elements, time, mu)
+# 時間ごとの衛星軌道の遷移をプロットする
+time_steps = np.arange(0, 360000, 600)  # 0秒から360000秒までの、600秒刻みの時刻配列を作成
+positions, angles, velocitys, angular_velocitys = [], [], [], []
 
-# 結果を表示
-print("2D position:", position_2d, "km")
-print("Angle:", np.rad2deg(angle), "degrees")
-print("2D velocity:", velocity_2d, "km/s")
-print("Angular velocity:", np.rad2deg(angular_velocity), "degrees/s")
+for t in time_steps:
+    pos, ang, vel, ang_vel = calculate_position_velocity(optimized_orbit_elements, t, mu)
+    positions.append(pos)
+    angles.append(ang)
+    velocitys.append(vel)
+    angular_velocitys.append(ang_vel)
+
+num_time_steps = len(time_steps)  # time_stepsの個数を取得
+time = np.linspace(0, num_time_steps/10, num_time_steps)  # num_time_stepsを使用
+positions = np.array(positions)
+angles = np.array(angles)
+velocitys = np.array(velocitys)
+angular_velocitys = np.array(angular_velocitys)
+
+# ｸﾞﾗﾌの初期化
+fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+
+# 時間とｸｫｰﾀﾆｵﾝの関係
+axs[0, 0].plot(positions[:, 0], positions[:, 1])
+axs[0, 0].set_xlabel('Position_X')
+axs[0, 0].set_ylabel('Position_Y')
+
+# 時間と誤差ｸｫｰﾀﾆｵﾝの関係
+axs[0, 1].plot(time, angles)
+axs[0, 1].set_xlabel('Time')
+axs[0, 1].set_ylabel('Angle')
+
+# 時間とｵｲﾗｰ角の関係
+axs[1, 0].plot(time, velocitys)
+axs[1, 0].set_xlabel('Time')
+axs[1, 0].set_ylabel('Vlocity')
+
+# 時間と回転軸の変化の関係
+# axs[1, 1].plot(time, theta_error_quaternions)
+axs[1, 1].plot(time, angular_velocitys)
+axs[1, 1].set_xlabel('Time')
+axs[1, 1].set_ylabel('Angular_velocity')
+
+# ｸﾞﾗﾌのﾚｲｱｳﾄを調整
+fig.tight_layout()
+
+# ｸﾞﾗﾌをPNGﾌｧｲﾙに保存
+fig.savefig('combined_graph.png')
