@@ -3,10 +3,8 @@ from .util import transform as tf, kfilter as kf
 
 class DisturbTorq:
     def __init__(self):
-        # ｶﾙﾏﾝﾌｨﾙﾀ初期化
-        self.disturb_torque_filter = kf.SimpleKalmanFilter(0.1, 0.1, np.zeros(3))
-        self.alpha, self.beta = 10., 50.
-
+        self.disturb_torque_filter = kf.SimpleKalmanFilter(0.1, 0.1, np.zeros(3)) # ｶﾙﾏﾝﾌｨﾙﾀ初期化
+        self.alpha, self.beta = 10., 50. # 状態FB制御のｹﾞｲﾝ
         self.period = 100 # 外乱ﾄﾙｸの周期
         self.amplitude = np.array([0.5, 0.5, 0.5]) # 外乱ﾄﾙｸの振幅
 
