@@ -32,6 +32,8 @@ outディレクトリに出力結果をまとめています。
 
 ![](out/combined_graph.png)
 
+![](out/satellite.drawio.svg)
+
 ## Software Architecture
 
 未検討

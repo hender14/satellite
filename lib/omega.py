@@ -5,7 +5,7 @@ from .util import transform as tf, pid, kfilter as kf
 
 class AngulVelocity:
     def __init__(self, omega_current, tgt_omega):
-        self.pid_controller = pid.PIDController(0.0, 0., 0., 0.1) # kp, ki, kd, dt
+        self.pid_controller = pid.PIDController(0.0, 0., 0., 0.1, 3) # kp, ki, kd, dt, arraynum
         self.sensor_filter = kf.SimpleKalmanFilter(0.1, 0.1, omega_current) # ｶﾙﾏﾝﾌｨﾙﾀ初期化
         self.omega_current = omega_current  # 初期角速度
         self.max_angular_rate_change = 0.01  # [rad/s]: 最大加速ﾚｰﾄ
@@ -26,6 +26,8 @@ class AngulVelocity:
         tmp_l = (I @ omega.T).T
         tmp_r = u - tf.tmp_multi(omega, tmp_l)
         omega_dot = (I_inv @ tmp_r.T).T
+
+        # limit dw/dt
         omega_dot_limit = self.constrain_angular_rate(omega_dot)
 
         # calc w
@@ -42,9 +44,6 @@ class AngulVelocity:
 
         return self.omega_current
     
-    def pid_control(self):
-        # omega_err = tf.quaternion_to_euler(q_err)
-        self.omega_pid = self.pid_controller.update(self.omega_err)
     
     def calc_inst_omega(self):
         err = np.linalg.norm(self.omega_pid - self.omega_current)
@@ -53,6 +52,9 @@ class AngulVelocity:
         else :
             self.omega_inst = abs(self.omega_current) + self.angular_rate_change
         
+    def pid_control(self):
+        self.omega_pid = self.pid_controller.update(self.omega_err)
+
     # Functions to apply angular rate constraints
     def constrain_angular_rate(self, delta_angular_rate):
         return np.clip(delta_angular_rate, -self.max_angular_rate_change, self.max_angular_rate_change)

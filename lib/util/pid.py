@@ -2,13 +2,13 @@ import numpy as np
 
 # PID制御器ｸﾗｽ
 class PIDController:
-    def __init__(self, kp, ki, kd, dt):
+    def __init__(self, kp, ki, kd, dt, arraynum):
         self.kp = kp
         self.ki = ki
         self.kd = kd
         self.dt = dt
-        self.integral = np.zeros(3)
-        self.prev_error = np.zeros(3)
+        self.integral = np.zeros(arraynum)
+        self.prev_error = np.zeros(arraynum)
 
     def update(self, error):
         # 比例項

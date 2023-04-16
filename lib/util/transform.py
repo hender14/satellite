@@ -30,6 +30,11 @@ def quaternion_to_euler(q):
     euler_angle = rotation_matrix_to_euler(C)
     return euler_angle
 
+def quaternion_to_euler_deg(q):
+    C = quaternion_to_rotation_matrix(q)
+    euler_angle = rotation_matrix_to_euler_deg(C)
+    return euler_angle
+
 def quaternion_to_axis_angle(q):
     C = quaternion_to_rotation_matrix(q)
     # print(f"C = {C}")
@@ -47,6 +52,13 @@ def quaternion_to_rotation_matrix(q):
     return C
 
 def rotation_matrix_to_euler(C):
+    phi = np.arctan2(C[1, 2], C[2, 2])
+    theta = np.arctan2(-C[0, 2], np.sqrt(C[1, 2]**2 + C[2, 2]**2))
+    psi = np.arctan2(C[0, 1], C[0, 0])
+
+    return np.array([phi, theta, psi])
+
+def rotation_matrix_to_euler_deg(C):
     phi = np.arctan2(C[1, 2], C[2, 2])
     theta = np.arctan2(-C[0, 2], np.sqrt(C[1, 2]**2 + C[2, 2]**2))
     psi = np.arctan2(C[0, 1], C[0, 0])
