@@ -1,10 +1,12 @@
 import numpy as np
 import scipy.integrate as spi
 from scipy.spatial.transform import Rotation as R
-import transform as tf
+from .util import transform as tf, pid
 
 class AngulVelocity:
     def __init__(self, omega_current, tgt_omega):
+        # ｶﾙﾏﾝﾌｨﾙﾀ初期化
+        self.pid_controller = pid.PIDController(0.0, 0., 0., 0.1) # kp, ki, kd, dt
         self.omega_current = omega_current  # 初期角速度
         self.tgt_goal = tgt_omega  # 目標角速度
         # Constraints
@@ -30,8 +32,13 @@ class AngulVelocity:
         self.omega_err = self.omega_tgt - self.omega_current
         # print("omega_tgt:{} omega_current:{}".format(self.omega_tgt, self.omega_current))
         # print("omega:{} {}".format(self.omega_current, self.omega_err))
+        self.pid_control()
 
         return self.omega_current
+    
+    def pid_control(self):
+        # omega_err = tf.quaternion_to_euler(q_err)
+        self.omega_pid = self.pid_controller.update(self.omega_err)
     
     def calc_inst_omega(self, omega):
         # err = np.linalg.norm(self.omega_pid - omega)

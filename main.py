@@ -1,10 +1,7 @@
 import math
 import numpy as np
-import plot as pt
-import transform as tf
-import ff.ff as ff
-import omega.omega as omega
-import state.state as state
+from lib.util import plot as pt, transform as tf
+from lib import ff, omega, state
 
 # def debug_all():
 #     if DEBUG:

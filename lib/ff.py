@@ -1,29 +1,10 @@
 import numpy as np
-import transform as tf
-
-# 簡易ｶﾙﾏﾝﾌｨﾙﾀｸﾗｽ
-class SimpleKalmanFilter:
-    def __init__(self, process_noise, measurement_noise, initial_estimate):
-        self.process_noise = process_noise
-        self.measurement_noise = measurement_noise
-        self.estimate = initial_estimate
-
-    def update(self, measurement):
-        # 予測ｽﾃｯﾌﾟ
-        prediction = self.estimate
-
-        # 更新ｽﾃｯﾌﾟ
-        kalman_gain = self.process_noise / (self.process_noise + self.measurement_noise)
-        self.estimate = prediction + kalman_gain * (measurement - prediction)
-        self.process_noise = (1 - kalman_gain) * self.process_noise
-
-        return self.estimate
-
+from .util import transform as tf, kfilter as kf
 
 class DisturbTorq:
     def __init__(self):
         # ｶﾙﾏﾝﾌｨﾙﾀ初期化
-        self.disturb_torque_filter = SimpleKalmanFilter(0.1, 0.1, np.zeros(3))
+        self.disturb_torque_filter = kf.SimpleKalmanFilter(0.1, 0.1, np.zeros(3))
         self.alpha, self.beta = 10., 50.
 
         self.period = 100 # 外乱ﾄﾙｸの周期
